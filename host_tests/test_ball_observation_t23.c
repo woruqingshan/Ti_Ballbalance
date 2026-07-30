@@ -84,12 +84,14 @@ static void test_gate(void)
     result = ball_observation_gate_evaluate(&packet, true, 1000U, 1040U, &config);
     assert(result.control_valid);
     assert(result.reason == BALL_OBS_GATE_VALID);
+    assert(result.source_invalid_reason == 0U);
     assert(result.total_age_ms == 65U);
 
-    packet.flags |= BALL_OBSERVATION_FLAG_PREDICTED;
+    packet.flags = 0x14U;
     result = ball_observation_gate_evaluate(&packet, true, 1000U, 1040U, &config);
     assert(!result.control_valid);
-    assert(result.reason == BALL_OBS_GATE_PREDICTED_DISALLOWED);
+    assert(result.reason == BALL_OBS_GATE_FLAG_INVALID);
+    assert(result.source_invalid_reason == 1U);
 
     packet.flags = BALL_OBSERVATION_FLAG_FOUND | BALL_OBSERVATION_FLAG_VALID;
     packet.confidence_milli = 349U;
@@ -110,9 +112,10 @@ static void test_gate(void)
     result = ball_observation_gate_evaluate(&packet, true, 1000U, 1100U, &config);
     assert(result.reason == BALL_OBS_GATE_STALE);
 
-    packet.flags = BALL_OBSERVATION_FLAG_EMERGENCY;
+    packet.flags = 0xB8U;
     result = ball_observation_gate_evaluate(&packet, true, 1000U, 1000U, &config);
     assert(result.reason == BALL_OBS_GATE_EMERGENCY);
+    assert(result.source_invalid_reason == 11U);
 }
 
 static BallPositionControllerConfig controller_config(void)

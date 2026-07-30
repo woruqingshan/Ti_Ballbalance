@@ -35,6 +35,7 @@ typedef struct {
     uint16_t latest_vision_age_ms;
     uint8_t latest_sequence;
     uint8_t latest_flags;
+    uint8_t latest_invalid_reason;
     uint8_t has_sequence;
     uint8_t has_observation;
 } BallObservationRxStats;
@@ -81,11 +82,6 @@ static void ball_observation_stream_accept(BallObservationStream *stream,
     if (stream->stats.has_sequence != 0U) {
         delta = (uint8_t) (packet->sequence - stream->stats.latest_sequence);
         if (delta == 0U) {
-            /*
-             * A duplicate proves that a protocol frame arrived, but it must not
-             * refresh observation version or age. The sender contract is
-             * latest-only with no retransmission of historical observations.
-             */
             stream->stats.duplicate_frames++;
             return;
         }
@@ -99,6 +95,8 @@ static void ball_observation_stream_accept(BallObservationStream *stream,
     stream->stats.has_observation = 1U;
     stream->stats.latest_sequence = packet->sequence;
     stream->stats.latest_flags = packet->flags;
+    stream->stats.latest_invalid_reason =
+        ball_observation_packet_invalid_reason(packet);
     stream->stats.latest_position_centi_cm = packet->position_centi_cm;
     stream->stats.latest_velocity_centi_cm_s = packet->velocity_centi_cm_s;
     stream->stats.latest_confidence_milli = packet->confidence_milli;

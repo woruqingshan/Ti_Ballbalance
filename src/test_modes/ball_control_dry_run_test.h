@@ -42,7 +42,8 @@ typedef struct {
     int32_t target_offset_mdeg;
 
     uint8_t mode;
-    uint8_t invalid_reason;
+    uint8_t invalid_reason;        /* TI gate reason. */
+    uint8_t source_invalid_reason; /* Fixed-14 reason nibble. */
     uint8_t reacquire_count;
     uint8_t control_valid;
     uint8_t emergency_latched;
@@ -135,6 +136,8 @@ static void ball_control_dry_run_handle_new_observation(
         stream->stats.latest_received_ms;
     g_ball_control_dry_run_stats.total_age_ms = gate.total_age_ms;
     g_ball_control_dry_run_stats.invalid_reason = (uint8_t) gate.reason;
+    g_ball_control_dry_run_stats.source_invalid_reason =
+        gate.source_invalid_reason;
 
     if ((packet != 0) && ball_observation_packet_emergency(packet)) {
         ball_control_dry_run_latch_emergency(controller);
@@ -212,6 +215,8 @@ static void ball_control_dry_run_check_age_and_link(
         gate_config);
     g_ball_control_dry_run_stats.total_age_ms = gate.total_age_ms;
     g_ball_control_dry_run_stats.invalid_reason = (uint8_t) gate.reason;
+    g_ball_control_dry_run_stats.source_invalid_reason =
+        gate.source_invalid_reason;
 
     new_observation_age = (uint32_t) (
         now_ms - stream->stats.latest_received_ms);
@@ -262,6 +267,8 @@ static void ball_control_dry_run_test_run(void)
         APP_BALL_CONTROL_TARGET_CENTI_CM;
     g_ball_control_dry_run_stats.invalid_reason =
         (uint8_t) BALL_OBS_GATE_NO_OBSERVATION;
+    g_ball_control_dry_run_stats.source_invalid_reason =
+        (uint8_t) BALL_OBSERVATION_INVALID_NONE;
     g_ball_control_dry_run_stats.total_age_ms = 0xFFFFFFFFU;
     ball_control_dry_run_set_mode(BALL_CONTROL_DRY_WAITING);
 
@@ -286,10 +293,6 @@ static void ball_control_dry_run_test_run(void)
         ball_control_dry_run_check_age_and_link(
             &stream, &gate_config, &controller, now_ms);
 
-        /*
-         * Stage T3 is intentionally compute-only. It never initializes UART1,
-         * EmmV5, RodMotorControl or any motor output path.
-         */
         if (processed < APP_BALL_OBS_RX_BUDGET_BYTES) {
             __WFI();
         }

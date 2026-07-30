@@ -16,18 +16,32 @@
 #define BALL_OBSERVATION_FLAG_VALID              0x02U
 #define BALL_OBSERVATION_FLAG_PREDICTED          0x04U
 #define BALL_OBSERVATION_FLAG_EMERGENCY          0x08U
-#define BALL_OBSERVATION_KNOWN_FLAGS             \
-    (BALL_OBSERVATION_FLAG_FOUND |               \
-     BALL_OBSERVATION_FLAG_VALID |               \
-     BALL_OBSERVATION_FLAG_PREDICTED |           \
-     BALL_OBSERVATION_FLAG_EMERGENCY)
+#define BALL_OBSERVATION_STATUS_MASK             0x0FU
+#define BALL_OBSERVATION_REASON_MASK             0xF0U
+#define BALL_OBSERVATION_REASON_SHIFT               4U
 
 #define BALL_OBSERVATION_CONFIDENCE_MAX          1000U
+
+typedef enum {
+    BALL_OBSERVATION_INVALID_NONE = 0,
+    BALL_OBSERVATION_INVALID_NOT_FOUND = 1,
+    BALL_OBSERVATION_INVALID_LOW_CONFIDENCE = 2,
+    BALL_OBSERVATION_INVALID_OUT_OF_ROI = 3,
+    BALL_OBSERVATION_INVALID_POSITION_JUMP = 4,
+    BALL_OBSERVATION_INVALID_STALE = 5,
+    BALL_OBSERVATION_INVALID_OUT_OF_RANGE = 6,
+    BALL_OBSERVATION_INVALID_SOURCE_ERROR = 7,
+    BALL_OBSERVATION_INVALID_PIPE_AXIS = 8,
+    BALL_OBSERVATION_INVALID_VELOCITY = 9,
+    BALL_OBSERVATION_INVALID_REACQUIRING = 10,
+    BALL_OBSERVATION_INVALID_SHUTDOWN = 11
+} BallObservationInvalidReason;
 
 typedef enum {
     BALL_OBSERVATION_PARSE_INCOMPLETE = 0,
     BALL_OBSERVATION_PARSE_ACCEPTED,
     BALL_OBSERVATION_PARSE_BAD_CRC,
+    /* Kept for source compatibility; Fixed-14 v1 defines all flag bits. */
     BALL_OBSERVATION_PARSE_BAD_FLAGS,
     BALL_OBSERVATION_PARSE_BAD_CONFIDENCE
 } BallObservationParseResult;
@@ -75,11 +89,6 @@ static void ball_observation_parser_wait_for_sof(
     }
 }
 
-/*
- * Retain a possible SOF suffix after a malformed full frame. This allows the
- * parser to recover immediately when a dropped/noisy byte shifted the next
- * frame header into the current 14-byte window.
- */
 static void ball_observation_parser_resync_full_frame(
     BallObservationParser *parser)
 {
@@ -113,7 +122,6 @@ static BallObservationParseResult ball_observation_decode_frame(
 {
     uint16_t received_crc;
     uint16_t calculated_crc;
-    uint8_t flags;
     uint16_t confidence;
 
     received_crc = ball_observation_read_u16_le(&frame[12]);
@@ -124,11 +132,11 @@ static BallObservationParseResult ball_observation_decode_frame(
         return BALL_OBSERVATION_PARSE_BAD_CRC;
     }
 
-    flags = frame[3];
-    if ((flags & (uint8_t) ~BALL_OBSERVATION_KNOWN_FLAGS) != 0U) {
-        return BALL_OBSERVATION_PARSE_BAD_FLAGS;
-    }
-
+    /*
+     * Fixed-14 v1 uses bits 0..3 as status and bits 4..7 as invalid_reason.
+     * Therefore 0x14 and 0xB8 are valid protocol values and must not be
+     * rejected as unknown flags.
+     */
     confidence = ball_observation_read_u16_le(&frame[8]);
     if (confidence > BALL_OBSERVATION_CONFIDENCE_MAX) {
         return BALL_OBSERVATION_PARSE_BAD_CONFIDENCE;
@@ -136,7 +144,7 @@ static BallObservationParseResult ball_observation_decode_frame(
 
     if (packet != 0) {
         packet->sequence = frame[2];
-        packet->flags = flags;
+        packet->flags = frame[3];
         packet->position_centi_cm = ball_observation_read_i16_le(&frame[4]);
         packet->velocity_centi_cm_s = ball_observation_read_i16_le(&frame[6]);
         packet->confidence_milli = confidence;
@@ -208,6 +216,16 @@ static bool ball_observation_packet_emergency(const BallObservationPacket *packe
 {
     return packet != 0 &&
            (packet->flags & BALL_OBSERVATION_FLAG_EMERGENCY) != 0U;
+}
+
+static uint8_t ball_observation_packet_invalid_reason(
+    const BallObservationPacket *packet)
+{
+    if (packet == 0) {
+        return (uint8_t) BALL_OBSERVATION_INVALID_NONE;
+    }
+    return (uint8_t) ((packet->flags & BALL_OBSERVATION_REASON_MASK) >>
+                      BALL_OBSERVATION_REASON_SHIFT);
 }
 
 #endif

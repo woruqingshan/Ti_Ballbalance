@@ -32,6 +32,8 @@
 #include "test_modes/ball_control_dry_run_test.h"
 #elif APP_MODE == APP_MODE_PI_MOTOR_TARGET_STREAM
 #include "app/pi_motor_target_stream_app.h"
+#elif APP_MODE == APP_MODE_PI_BALL_OBSERVATION_CONTROL
+#include "app/pi_ball_observation_control_app.h"
 #elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_TX_DIAG || \
       APP_MODE == APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG || \
       APP_MODE == APP_MODE_PI_TI_PROTOCOL_RX_IRQ_DIAG
@@ -135,11 +137,6 @@ static void init_app(void)
 #endif
 }
 
-/*
- * Modes 18 and 19 intentionally initialize only the board clock, millisecond
- * time base and verified UART0 IRQ/ring receive path. They do not initialize
- * VisionLink TX, UART1/Emm, RodMotorControl, vehicle logic or telemetry.
- */
 #if APP_MODE == APP_MODE_BALL_OBSERVATION_RX_DIAG || \
     APP_MODE == APP_MODE_BALL_CONTROL_DRY_RUN
 static void init_ball_observation_receive_only(void)
@@ -147,6 +144,16 @@ static void init_ball_observation_receive_only(void)
     SYSCFG_DL_init();
     bsp_time_init();
     vision_uart_init();
+}
+#endif
+
+#if APP_MODE == APP_MODE_PI_BALL_OBSERVATION_CONTROL
+static void init_ball_observation_live(void)
+{
+    SYSCFG_DL_init();
+    bsp_time_init();
+    vision_uart_init();
+    emm_v5_init();
 }
 #endif
 
@@ -183,6 +190,8 @@ int main(void)
 #if APP_MODE == APP_MODE_BALL_OBSERVATION_RX_DIAG || \
     APP_MODE == APP_MODE_BALL_CONTROL_DRY_RUN
     init_ball_observation_receive_only();
+#elif APP_MODE == APP_MODE_PI_BALL_OBSERVATION_CONTROL
+    init_ball_observation_live();
 #else
     init_app();
 #endif
@@ -211,6 +220,8 @@ int main(void)
     ball_control_dry_run_test_run();
 #elif APP_MODE == APP_MODE_PI_MOTOR_TARGET_STREAM
     pi_motor_target_stream_app_run();
+#elif APP_MODE == APP_MODE_PI_BALL_OBSERVATION_CONTROL
+    pi_ball_observation_control_app_run();
 #elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_TX_DIAG
     pi_ti_protocol_tx_diag_run();
 #elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG

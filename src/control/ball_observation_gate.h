@@ -30,6 +30,7 @@ typedef struct {
 typedef struct {
     uint32_t total_age_ms;
     BallObservationGateReason reason;
+    uint8_t source_invalid_reason;
     bool control_valid;
 } BallObservationGateResult;
 
@@ -59,6 +60,8 @@ static BallObservationGateResult ball_observation_gate_evaluate(
 
     result.total_age_ms = 0xFFFFFFFFU;
     result.reason = BALL_OBS_GATE_NO_OBSERVATION;
+    result.source_invalid_reason =
+        (uint8_t) BALL_OBSERVATION_INVALID_NONE;
     result.control_valid = false;
 
     if (!has_observation || (packet == 0) || (config == 0)) {
@@ -67,6 +70,8 @@ static BallObservationGateResult ball_observation_gate_evaluate(
 
     result.total_age_ms = ball_observation_total_age_ms(
         packet, received_ms, now_ms);
+    result.source_invalid_reason =
+        ball_observation_packet_invalid_reason(packet);
 
     if (ball_observation_packet_emergency(packet)) {
         result.reason = BALL_OBS_GATE_EMERGENCY;

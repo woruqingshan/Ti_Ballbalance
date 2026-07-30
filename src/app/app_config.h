@@ -19,36 +19,17 @@
 #define APP_MODE_PI_TI_PROTOCOL_TX_DIAG         15
 #define APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG    16
 #define APP_MODE_PI_TI_PROTOCOL_RX_IRQ_DIAG     17
-
-/* BallObservation staged development modes. */
 #define APP_MODE_BALL_OBSERVATION_RX_DIAG       18
 #define APP_MODE_BALL_CONTROL_DRY_RUN           19
+#define APP_MODE_PI_MOTOR_TARGET_STREAM         20
+#define APP_MODE_PI_BALL_OBSERVATION_CONTROL    21
 
-/*
- * Formal one-way Raspberry Pi -> TI motor-target stream.
- *
- * Mode 16 remains the finite CH340 event diagnostic. Mode 20 is the production
- * executor and uses the already verified UART0 IRQ/ring-buffer receive path.
- */
-#define APP_MODE_PI_MOTOR_TARGET_STREAM          20
 #define APP_MODE_PI_MOTOR_TARGET_CH340_DIAG \
     APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG
 
-/* Reserved for the later BallObservation -> TI closed-loop production app. */
-#define APP_MODE_PI_BALL_OBSERVATION_CONTROL    21
+/* Safe default after applying this patch. Select Mode 19 or 21 explicitly. */
+#define APP_MODE APP_MODE_BALL_OBSERVATION_RX_DIAG
 
-/*
- * T2 default: receive real/simulated observations and evaluate control
- * eligibility. Change to APP_MODE_BALL_CONTROL_DRY_RUN for T3.
- */
-#define APP_MODE APP_MODE_BALL_CONTROL_DRY_RUN
-
-/* Mode 21 remains blocked until motor-output stages are implemented. */
-#if APP_MODE == APP_MODE_PI_BALL_OBSERVATION_CONTROL
-#error Mode 21 is reserved and not implemented by the T2/T3 patch
-#endif
-
-/* Set to 1 only after the phase-4 dynamic-command tests are documented. */
 #define APP_EMM_COMMAND_SEMANTICS_VERIFIED 0
 
 #define APP_CONTROL_PERIOD_MS             20U
@@ -79,7 +60,6 @@
 #define APP_TASK3_PLUS_HOLD_MS             150U
 #define APP_TASK3_FINAL_HOLD_MS            300U
 
-/* Hardware calibration test settings. */
 #define APP_EMM_POSITION_QUERY_PERIOD_MS    100U
 #define APP_EMM_POSITION_UNITS_PER_REVOLUTION (65536LL)
 #define APP_SIGN_TEST_DEFAULT_STEP_PULSE     10
@@ -88,7 +68,6 @@
 #define APP_SIGN_TEST_ACCELERATION           10U
 #define APP_SIGN_TEST_POSITION_SETTLE_MS     400U
 
-/* Existing startup-to-horizontal test settings. */
 #define APP_STARTUP_TEST_BOOT_DELAY_MS       2000U
 #define APP_STARTUP_TEST_COMMAND_GAP_MS       250U
 #define APP_STARTUP_TEST_TARGET_ANGLE_MDEG  (-28100L)
@@ -96,7 +75,6 @@
 #define APP_STARTUP_TEST_SPEED_RPM              20U
 #define APP_STARTUP_TEST_ACCELERATION            10U
 
-/* Unified rod-motor coordinate and safety configuration. */
 #define APP_ROD_MOTOR_PULSES_PER_REV          3200L
 #define APP_ROD_PHYSICAL_MIN_MDEG           (-70000L)
 #define APP_ROD_PHYSICAL_MAX_MDEG                0L
@@ -112,7 +90,6 @@
 #define APP_ROD_MANUAL_ACCELERATION              10U
 #define APP_ROD_MANUAL_DEFAULT_STEP_MDEG         500L
 
-/* Phase 4: dynamic command-semantics experiment settings. */
 #define APP_SEMANTICS_TEST_OFFSET_MDEG          2000L
 #define APP_SEMANTICS_TEST_SPEED_RPM              10U
 #define APP_SEMANTICS_TEST_ACCELERATION            5U
@@ -120,7 +97,6 @@
 #define APP_SEMANTICS_RESULT_SETTLE_MS           1500U
 #define APP_SEMANTICS_QUERY_WAIT_MS               180U
 
-/* Phase 5-7: legacy versioned Pi-TI control and observation link. */
 #define APP_PI_LINK_TIMEOUT_MS                   800U
 #define APP_PI_STATUS_PERIOD_MS                  100U
 #define APP_PI_HEARTBEAT_PERIOD_MS               500U
@@ -130,22 +106,15 @@
 #define APP_PI_PROTOCOL_DIAG_TIMEOUT_MS          5000U
 #define APP_PI_MANUAL_MAX_OFFSET_MDEG            3000L
 
-/* Formal minimal one-way latest-target stream. */
 #define APP_PI_TARGET_FRAME_SIZE                    8U
 #define APP_PI_TARGET_RX_BUDGET_BYTES              32U
 #define APP_PI_TARGET_MIN_OFFSET_MDEG           (-3000L)
 #define APP_PI_TARGET_MAX_OFFSET_MDEG             3000L
 #define APP_PI_TARGET_TIMEOUT_MS                    500U
 #define APP_PI_TARGET_DIRECTION_SIGN                  1L
-
-/* Only used by mode 16 CH340 event diagnostics. */
 #define APP_PI_TARGET_DIAG_ECHO_EACH_BYTE             1U
 
-/*
- * BallObservation receive and validation settings.
- * Frame: A5 5A | seq | flags | position:i16le | velocity:i16le |
- *        confidence:u16le | vision_age_ms:u16le | crc16:u16le
- */
+/* Fixed-14 BallObservation receive, gate and control settings. */
 #define APP_BALL_OBS_FRAME_SIZE                      14U
 #define APP_BALL_OBS_RX_BUDGET_BYTES                32U
 #define APP_BALL_OBS_OBSERVER_PERIOD_MS              10U
@@ -160,10 +129,6 @@
 #define APP_BALL_OBS_MIN_CONFIDENCE_MILLI           350U
 #define APP_BALL_OBS_ALLOW_PREDICTED                   0U
 
-/*
- * T3 fixed-point dry-run controller. It computes target offset in mdeg but Mode
- * 19 never initializes or commands UART1/Emm/motor hardware.
- */
 #define APP_BALL_CONTROL_TARGET_CENTI_CM               0
 #define APP_BALL_CONTROL_KP_MDEG_PER_CM                60L
 #define APP_BALL_CONTROL_KD_MDEG_PER_CM_S              15L
@@ -171,7 +136,11 @@
 #define APP_BALL_CONTROL_MAX_SLEW_MDEG_PER_S          800L
 #define APP_BALL_CONTROL_MOTOR_SIGN                      1L
 
-/* Preview controller. These are safe bring-up values, not final Task 3 gains. */
+/* Mode 21 live-output settings. Keep the initial range deliberately small. */
+#define APP_BALL_LIVE_MOTOR_UPDATE_PERIOD_MS          25U
+#define APP_BALL_LIVE_DISABLE_ON_LINK_TIMEOUT           1U
+#define APP_BALL_LIVE_AUTO_REENABLE_AFTER_RECOVERY      1U
+
 #define APP_PREVIEW_POSITION_KP                  0.15f
 #define APP_PREVIEW_VELOCITY_KD                  0.020f
 #define APP_PREVIEW_CONTROL_MAX                  2.0f
@@ -183,11 +152,6 @@
 #define APP_VISION_MAX_AGE_MS                      120U
 #define APP_VISION_ALLOW_PREDICTED                   1U
 
-/*
- * Phase 6 defaults to dry-run. Set to 1 only after dry-run direction, timeout,
- * range and command-rate tests pass. Even when enabled, output is limited to
- * +/-0.5 motor-degree around the horizontal pose and updated at <=10 Hz.
- */
 #define APP_PHASE6_MOTOR_OUTPUT_ENABLED              0U
 #define APP_PHASE6_MOTOR_UPDATE_PERIOD_MS          100U
 

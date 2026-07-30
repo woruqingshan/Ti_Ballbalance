@@ -26,10 +26,10 @@ typedef struct {
     uint8_t sequence;
     uint8_t flags;
     uint8_t control_valid;
-    uint8_t invalid_reason;
+    uint8_t invalid_reason;        /* TI gate reason, kept for compatibility. */
+    uint8_t source_invalid_reason; /* Fixed-14 flags bits 4..7. */
 } BallObservationObserverStats;
 
-/* Existing T1 Watch symbol is preserved for backwards-compatible diagnostics. */
 volatile BallObservationRxStats g_ball_observation_rx_stats;
 volatile BallObservationObserverStats g_ball_observation_observer_stats;
 
@@ -72,7 +72,9 @@ static void ball_observation_observer_evaluate(
 
     if ((g_ball_observation_observer_stats.evaluations != 0U) &&
         ((g_ball_observation_observer_stats.control_valid != new_valid) ||
-         (g_ball_observation_observer_stats.invalid_reason != new_reason))) {
+         (g_ball_observation_observer_stats.invalid_reason != new_reason) ||
+         (g_ball_observation_observer_stats.source_invalid_reason !=
+          result.source_invalid_reason))) {
         g_ball_observation_observer_stats.state_changes++;
     }
 
@@ -83,6 +85,8 @@ static void ball_observation_observer_evaluate(
     g_ball_observation_observer_stats.last_evaluation_ms = now_ms;
     g_ball_observation_observer_stats.control_valid = new_valid;
     g_ball_observation_observer_stats.invalid_reason = new_reason;
+    g_ball_observation_observer_stats.source_invalid_reason =
+        result.source_invalid_reason;
 
     if (packet != 0) {
         g_ball_observation_observer_stats.position_centi_cm =
@@ -114,6 +118,8 @@ static void ball_observation_rx_diag_run(void)
            sizeof(g_ball_observation_observer_stats));
     g_ball_observation_observer_stats.invalid_reason =
         (uint8_t) BALL_OBS_GATE_NO_OBSERVATION;
+    g_ball_observation_observer_stats.source_invalid_reason =
+        (uint8_t) BALL_OBSERVATION_INVALID_NONE;
     g_ball_observation_observer_stats.total_age_ms = 0xFFFFFFFFU;
 
     for (;;) {
@@ -130,7 +136,6 @@ static void ball_observation_rx_diag_run(void)
                 &stream, &gate_config, now_ms);
         }
 
-        /* Mode 18 remains receive/observe only. It never touches UART1 or motor. */
         if (processed < APP_BALL_OBS_RX_BUDGET_BYTES) {
             __WFI();
         }
