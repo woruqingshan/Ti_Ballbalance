@@ -16,12 +16,15 @@
 #define APP_MODE_BALL_STATE_SIMULATION          12
 #define APP_MODE_REAL_VISION_OBSERVER           13
 #define APP_MODE_PI_TI_UART0_DIAG               14
+#define APP_MODE_PI_TI_PROTOCOL_TX_DIAG         15
+#define APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG    16
+#define APP_MODE_PI_TI_PROTOCOL_RX_IRQ_DIAG     17
 
 /*
  * Safe phase-5 default. UART0 runs the binary Pi-TI protocol. The motor remains
  * disabled and does not move until a valid STARTUP_HORIZONTAL command arrives.
  */
-#define APP_MODE APP_MODE_PI_TI_UART0_DIAG
+#define APP_MODE APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG
 
 /* Set to 1 only after the phase-4 dynamic-command tests are documented. */
 #define APP_EMM_COMMAND_SEMANTICS_VERIFIED 0
@@ -102,6 +105,7 @@
 #define APP_PI_LINK_STATS_PERIOD_MS             1000U
 #define APP_PI_PREVIEW_PERIOD_MS                  50U
 #define APP_PI_UART0_DIAG_PERIOD_MS              500U
+#define APP_PI_PROTOCOL_DIAG_TIMEOUT_MS          5000U
 #define APP_PI_MANUAL_MAX_OFFSET_MDEG            3000L
 
 /* Preview controller. These are safe bring-up values, not final Task 3 gains. */

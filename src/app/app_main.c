@@ -26,6 +26,10 @@
 #include "test_modes/ball_state_link_test.h"
 #elif APP_MODE == APP_MODE_PI_TI_UART0_DIAG
 #include "test_modes/pi_ti_uart0_diag_test.h"
+#elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_TX_DIAG || \
+      APP_MODE == APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG || \
+      APP_MODE == APP_MODE_PI_TI_PROTOCOL_RX_IRQ_DIAG
+#include "test_modes/pi_ti_protocol_diag_test.h"
 #endif
 #include "vehicle/vehicle_control_port.h"
 
@@ -175,6 +179,12 @@ int main(void)
     ball_state_link_test_run(false);
 #elif APP_MODE == APP_MODE_PI_TI_UART0_DIAG
     pi_ti_uart0_diag_test_run();
+#elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_TX_DIAG
+    pi_ti_protocol_tx_diag_run();
+#elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG
+    pi_ti_protocol_rx_poll_diag_run();
+#elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_RX_IRQ_DIAG
+    pi_ti_protocol_rx_irq_diag_run();
 #else
     uint32_t last_control = 0U;
     uint32_t last_task = 0U;
