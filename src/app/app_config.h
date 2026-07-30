@@ -20,6 +20,10 @@
 #define APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG    16
 #define APP_MODE_PI_TI_PROTOCOL_RX_IRQ_DIAG     17
 
+/* BallObservation staged development modes. */
+#define APP_MODE_BALL_OBSERVATION_RX_DIAG       18
+#define APP_MODE_BALL_CONTROL_DRY_RUN           19
+
 /*
  * Formal one-way Raspberry Pi -> TI motor-target stream.
  *
@@ -30,7 +34,17 @@
 #define APP_MODE_PI_MOTOR_TARGET_CH340_DIAG \
     APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG
 
-#define APP_MODE APP_MODE_PI_MOTOR_TARGET_STREAM
+/* Reserved for the later BallObservation -> TI closed-loop production app. */
+#define APP_MODE_PI_BALL_OBSERVATION_CONTROL    21
+
+/* T1 default: receive/decode only; no UART1, Emm or motor action. */
+#define APP_MODE APP_MODE_BALL_OBSERVATION_RX_DIAG
+
+/* Prevent unfinished future modes from falling through to the legacy app. */
+#if APP_MODE == APP_MODE_BALL_CONTROL_DRY_RUN || \
+    APP_MODE == APP_MODE_PI_BALL_OBSERVATION_CONTROL
+#error Mode 19/21 is reserved but not implemented by the T1 patch
+#endif
 
 /* Set to 1 only after the phase-4 dynamic-command tests are documented. */
 #define APP_EMM_COMMAND_SEMANTICS_VERIFIED 0
@@ -124,6 +138,14 @@
 
 /* Only used by mode 16 CH340 event diagnostics. */
 #define APP_PI_TARGET_DIAG_ECHO_EACH_BYTE             1U
+
+/*
+ * T1 BallObservation receive-only settings.
+ * Frame: A5 5A | seq | flags | position:i16le | velocity:i16le |
+ *        confidence:u16le | vision_age_ms:u16le | crc16:u16le
+ */
+#define APP_BALL_OBS_FRAME_SIZE                      14U
+#define APP_BALL_OBS_RX_BUDGET_BYTES                32U
 
 /* Preview controller. These are safe bring-up values, not final Task 3 gains. */
 #define APP_PREVIEW_POSITION_KP                  0.15f

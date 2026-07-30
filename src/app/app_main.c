@@ -26,6 +26,8 @@
 #include "test_modes/ball_state_link_test.h"
 #elif APP_MODE == APP_MODE_PI_TI_UART0_DIAG
 #include "test_modes/pi_ti_uart0_diag_test.h"
+#elif APP_MODE == APP_MODE_BALL_OBSERVATION_RX_DIAG
+#include "test_modes/ball_observation_rx_diag.h"
 #elif APP_MODE == APP_MODE_PI_MOTOR_TARGET_STREAM
 #include "app/pi_motor_target_stream_app.h"
 #elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_TX_DIAG || \
@@ -131,6 +133,20 @@ static void init_app(void)
 #endif
 }
 
+/*
+ * T1 intentionally initializes only the board clock, millisecond time base and
+ * verified UART0 IRQ/ring receive path. It does not initialize VisionLink,
+ * UART1/Emm, RodMotorControl, vehicle logic, telemetry or any motor output.
+ */
+#if APP_MODE == APP_MODE_BALL_OBSERVATION_RX_DIAG
+static void init_ball_observation_rx_diag(void)
+{
+    SYSCFG_DL_init();
+    bsp_time_init();
+    vision_uart_init();
+}
+#endif
+
 #if APP_MODE == APP_MODE_EMM_POSITION_CALIBRATION
 static void run_position_calibration_mode(void)
 {
@@ -161,7 +177,11 @@ static void run_motor_sign_test_mode(void)
 
 int main(void)
 {
+#if APP_MODE == APP_MODE_BALL_OBSERVATION_RX_DIAG
+    init_ball_observation_rx_diag();
+#else
     init_app();
+#endif
 
 #if APP_MODE == APP_MODE_EMM_POSITION_CALIBRATION
     run_position_calibration_mode();
@@ -181,6 +201,8 @@ int main(void)
     ball_state_link_test_run(false);
 #elif APP_MODE == APP_MODE_PI_TI_UART0_DIAG
     pi_ti_uart0_diag_test_run();
+#elif APP_MODE == APP_MODE_BALL_OBSERVATION_RX_DIAG
+    ball_observation_rx_diag_run();
 #elif APP_MODE == APP_MODE_PI_MOTOR_TARGET_STREAM
     pi_motor_target_stream_app_run();
 #elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_TX_DIAG
