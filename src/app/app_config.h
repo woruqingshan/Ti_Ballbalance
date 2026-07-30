@@ -21,18 +21,16 @@
 #define APP_MODE_PI_TI_PROTOCOL_RX_IRQ_DIAG     17
 
 /*
- * Finite CH340 diagnostic mode.
+ * Formal one-way Raspberry Pi -> TI motor-target stream.
  *
- * Keep numeric mode 16 as the app_main.c entry so the Keil project does not
- * need a project-file change. This diagnostic deliberately uses the same
- * vision_uart_read() IRQ/ring-buffer receive path that was proven by the
- * successful manual motor-control mode.
+ * Mode 16 remains the finite CH340 event diagnostic. Mode 20 is the production
+ * executor and uses the already verified UART0 IRQ/ring-buffer receive path.
  */
-#define APP_MODE_PI_MOTOR_TARGET_STREAM              20
+#define APP_MODE_PI_MOTOR_TARGET_STREAM          20
 #define APP_MODE_PI_MOTOR_TARGET_CH340_DIAG \
     APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG
 
-#define APP_MODE APP_MODE_PI_MOTOR_TARGET_CH340_DIAG
+#define APP_MODE APP_MODE_PI_MOTOR_TARGET_STREAM
 
 /* Set to 1 only after the phase-4 dynamic-command tests are documented. */
 #define APP_EMM_COMMAND_SEMANTICS_VERIFIED 0
@@ -106,7 +104,7 @@
 #define APP_SEMANTICS_RESULT_SETTLE_MS           1500U
 #define APP_SEMANTICS_QUERY_WAIT_MS               180U
 
-/* Phase 5-7: versioned Pi-TI control and observation link. */
+/* Phase 5-7: legacy versioned Pi-TI control and observation link. */
 #define APP_PI_LINK_TIMEOUT_MS                   800U
 #define APP_PI_STATUS_PERIOD_MS                  100U
 #define APP_PI_HEARTBEAT_PERIOD_MS               500U
@@ -116,14 +114,16 @@
 #define APP_PI_PROTOCOL_DIAG_TIMEOUT_MS          5000U
 #define APP_PI_MANUAL_MAX_OFFSET_MDEG            3000L
 
-/* Minimal one-way latest-target stream. */
+/* Formal minimal one-way latest-target stream. */
 #define APP_PI_TARGET_FRAME_SIZE                    8U
 #define APP_PI_TARGET_RX_BUDGET_BYTES              32U
 #define APP_PI_TARGET_MIN_OFFSET_MDEG           (-3000L)
 #define APP_PI_TARGET_MAX_OFFSET_MDEG             3000L
 #define APP_PI_TARGET_TIMEOUT_MS                    500U
 #define APP_PI_TARGET_DIRECTION_SIGN                  1L
-#define APP_PI_TARGET_DIAG_ECHO_EACH_BYTE               1U
+
+/* Only used by mode 16 CH340 event diagnostics. */
+#define APP_PI_TARGET_DIAG_ECHO_EACH_BYTE             1U
 
 /* Preview controller. These are safe bring-up values, not final Task 3 gains. */
 #define APP_PREVIEW_POSITION_KP                  0.15f

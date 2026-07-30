@@ -26,6 +26,8 @@
 #include "test_modes/ball_state_link_test.h"
 #elif APP_MODE == APP_MODE_PI_TI_UART0_DIAG
 #include "test_modes/pi_ti_uart0_diag_test.h"
+#elif APP_MODE == APP_MODE_PI_MOTOR_TARGET_STREAM
+#include "app/pi_motor_target_stream_app.h"
 #elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_TX_DIAG || \
       APP_MODE == APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG || \
       APP_MODE == APP_MODE_PI_TI_PROTOCOL_RX_IRQ_DIAG
@@ -179,6 +181,8 @@ int main(void)
     ball_state_link_test_run(false);
 #elif APP_MODE == APP_MODE_PI_TI_UART0_DIAG
     pi_ti_uart0_diag_test_run();
+#elif APP_MODE == APP_MODE_PI_MOTOR_TARGET_STREAM
+    pi_motor_target_stream_app_run();
 #elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_TX_DIAG
     pi_ti_protocol_tx_diag_run();
 #elif APP_MODE == APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG
