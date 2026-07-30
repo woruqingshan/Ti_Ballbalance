@@ -6,6 +6,9 @@
 #include "communication/vision_uart.h"
 #include "protocol/pi_ti_messages.h"
 #include "protocol/protocol.h"
+#if APP_MODE == APP_MODE_PI_MOTOR_TARGET_STREAM
+#include "test_modes/pi_motor_target_stream_test.h"
+#endif
 #include "test_modes/test_console.h"
 #include "ti_msp_dl_config.h"
 #include <stdbool.h>
@@ -20,12 +23,11 @@
  * then creates the same frame through protocol_encode(), sends it once and
  * halts. No RX processing, heartbeat loop, UART1 or motor access.
  *
- * Mode 16: one-shot request/response using direct UART FIFO polling with the
- * UART0 NVIC interrupt disabled. It waits up to 5 seconds for one valid frame,
- * replies once with COMMAND_ACK and halts.
+ * Mode 16 is intentionally reused as APP_MODE_PI_MOTOR_TARGET_STREAM. This
+ * avoids changing app_main.c or the Keil project during competition bring-up.
  *
- * Mode 17: the same one-shot request/response through the existing RX ISR and
- * ring buffer. Comparing mode 16 and 17 isolates ISR/ring-buffer faults.
+ * Mode 17: one-shot request/response through the existing RX ISR and ring
+ * buffer. It is preserved for later diagnostics.
  */
 
 static void pi_ti_diag_halt(void)
@@ -122,36 +124,6 @@ static void pi_ti_diag_send_ack_for_frame(const ProtocolFrame *received,
     }
 }
 
-static bool pi_ti_diag_wait_polling(ProtocolFrame *received,
-                                    uint32_t timeout_ms)
-{
-    ProtocolParser parser;
-    uint32_t started_ms = bsp_time_ms();
-    uint8_t ignored;
-
-    /* Stop the existing RX ISR; this mode reads the hardware FIFO directly. */
-    NVIC_DisableIRQ(VISION_UART_INST_INT_IRQN);
-    NVIC_ClearPendingIRQ(VISION_UART_INST_INT_IRQN);
-
-    /* Discard bytes already copied into the ring before IRQ disable. */
-    while (vision_uart_read(&ignored)) {
-    }
-    while (!DL_UART_Main_isRXFIFOEmpty(VISION_UART_INST)) {
-        (void) DL_UART_Main_receiveData(VISION_UART_INST);
-    }
-
-    protocol_parser_init(&parser);
-    while ((uint32_t) (bsp_time_ms() - started_ms) < timeout_ms) {
-        if (!DL_UART_Main_isRXFIFOEmpty(VISION_UART_INST)) {
-            uint8_t byte = (uint8_t) DL_UART_Main_receiveData(VISION_UART_INST);
-            if (protocol_parser_push(&parser, byte, received)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 static bool pi_ti_diag_wait_irq(ProtocolFrame *received,
                                 uint32_t timeout_ms)
 {
@@ -175,24 +147,13 @@ static bool pi_ti_diag_wait_irq(ProtocolFrame *received,
     return false;
 }
 
+#if APP_MODE == APP_MODE_PI_MOTOR_TARGET_STREAM
+/* app_main.c already routes numeric mode 16 to this function. */
 static void pi_ti_protocol_rx_poll_diag_run(void)
 {
-    ProtocolFrame received;
-    uint32_t now_ms;
-
-    test_console_write_line("P16_POLL_READY_SEND_ONE_HELLO");
-    if (!pi_ti_diag_wait_polling(&received, APP_PI_PROTOCOL_DIAG_TIMEOUT_MS)) {
-        test_console_write_line("P16_TIMEOUT");
-        pi_ti_diag_halt();
-    }
-
-    test_console_write_line("P16_FRAME_OK");
-    now_ms = bsp_time_ms();
-    pi_ti_diag_send_ack_for_frame(&received, now_ms);
-    test_console_newline();
-    test_console_write_line("P16_REPLY_SENT");
-    pi_ti_diag_halt();
+    pi_motor_target_stream_test_run();
 }
+#endif
 
 static void pi_ti_protocol_rx_irq_diag_run(void)
 {

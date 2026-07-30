@@ -21,10 +21,15 @@
 #define APP_MODE_PI_TI_PROTOCOL_RX_IRQ_DIAG     17
 
 /*
- * Safe phase-5 default. UART0 runs the binary Pi-TI protocol. The motor remains
- * disabled and does not move until a valid STARTUP_HORIZONTAL command arrives.
+ * Fast competition bring-up mode.
+ * Reuse the already wired mode-16 entry in app_main.c so the Keil project and
+ * app_main.c do not need to change. Mode 16 now runs the latest-only motor
+ * target stream implemented in pi_motor_target_stream_test.h.
  */
-#define APP_MODE APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG
+#define APP_MODE_PI_MOTOR_TARGET_STREAM \
+    APP_MODE_PI_TI_PROTOCOL_RX_POLL_DIAG
+
+#define APP_MODE APP_MODE_PI_MOTOR_TARGET_STREAM
 
 /* Set to 1 only after the phase-4 dynamic-command tests are documented. */
 #define APP_EMM_COMMAND_SEMANTICS_VERIFIED 0
@@ -107,6 +112,14 @@
 #define APP_PI_UART0_DIAG_PERIOD_MS              500U
 #define APP_PI_PROTOCOL_DIAG_TIMEOUT_MS          5000U
 #define APP_PI_MANUAL_MAX_OFFSET_MDEG            3000L
+
+/* Minimal one-way latest-target stream. */
+#define APP_PI_TARGET_FRAME_SIZE                    8U
+#define APP_PI_TARGET_RX_BUDGET_BYTES              32U
+#define APP_PI_TARGET_MIN_OFFSET_MDEG           (-3000L)
+#define APP_PI_TARGET_MAX_OFFSET_MDEG             3000L
+#define APP_PI_TARGET_TIMEOUT_MS                    500U
+#define APP_PI_TARGET_DIRECTION_SIGN                  1L
 
 /* Preview controller. These are safe bring-up values, not final Task 3 gains. */
 #define APP_PREVIEW_POSITION_KP                  0.15f
