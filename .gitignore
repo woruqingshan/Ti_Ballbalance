@@ -53,3 +53,18 @@ runs/
 *.log
 *.csv
 *.pcap
+
+# macOS AppleDouble metadata
+**/._*
+.AppleDouble/
+
+# SEGGER J-Link runtime log
+keil/JLinkLog.txt
+
+
+# macOS AppleDouble metadata>>.gitignore
+**/._*>>.gitignore
+.AppleDouble/>>.gitignore
+
+# SEGGER J-Link runtime log>>.gitignore
+keil/JLinkLog.txt

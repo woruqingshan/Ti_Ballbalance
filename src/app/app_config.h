@@ -10,15 +10,17 @@
 #define APP_MODE_EMM_POSITION_CALIBRATION       6
 #define APP_MODE_MOTOR_SIGN_TEST                7
 #define APP_MODE_MOTOR_STARTUP_HORIZONTAL       8
+#define APP_MODE_ROD_MOTOR_MANUAL_CONTROL       9
+#define APP_MODE_MOTOR_COMMAND_SEMANTICS_TEST  10
 
 /*
- * Hardware startup test mode.
- * WARNING: after reset, the motor will automatically move from the manually
- * established 0-degree mechanical pose to approximately -28.1 degrees.
+ * Phase 3 default: after reset, the program assumes the mechanism has been
+ * manually placed at the physical 0-degree pose, moves it to -28.1 degrees,
+ * and then accepts safe UART0 manual-control commands.
  */
-#define APP_MODE APP_MODE_MOTOR_STARTUP_HORIZONTAL
+#define APP_MODE APP_MODE_MOTOR_COMMAND_SEMANTICS_TEST
 
-/* Set to 1 only after documented Emm dynamic-command semantic tests. */
+/* Set to 1 only after the phase-4 dynamic-command tests are documented. */
 #define APP_EMM_COMMAND_SEMANTICS_VERIFIED 0
 
 #define APP_CONTROL_PERIOD_MS             20U
@@ -58,12 +60,42 @@
 #define APP_SIGN_TEST_ACCELERATION           10U
 #define APP_SIGN_TEST_POSITION_SETTLE_MS     400U
 
-/* Startup-to-horizontal test settings. */
+/* Existing startup-to-horizontal test settings. */
 #define APP_STARTUP_TEST_BOOT_DELAY_MS       2000U
 #define APP_STARTUP_TEST_COMMAND_GAP_MS       250U
 #define APP_STARTUP_TEST_TARGET_ANGLE_MDEG  (-28100L)
 #define APP_STARTUP_TEST_PULSES_PER_REV       3200L
 #define APP_STARTUP_TEST_SPEED_RPM              20U
 #define APP_STARTUP_TEST_ACCELERATION            10U
+
+/*
+ * Phase 2: unified rod-motor coordinate and safety configuration.
+ * Physical motor coordinate: 0 deg at the manually established upper pose,
+ * CCW is negative, full measured mechanical range is approximately [-70, 0].
+ * Closed-loop development is initially restricted to +/-3 deg around the
+ * -28.1 deg horizontal pose.
+ */
+#define APP_ROD_MOTOR_PULSES_PER_REV          3200L
+#define APP_ROD_PHYSICAL_MIN_MDEG           (-70000L)
+#define APP_ROD_PHYSICAL_MAX_MDEG                0L
+#define APP_ROD_HORIZONTAL_MDEG             (-28100L)
+#define APP_ROD_CONTROL_MIN_MDEG            (-31100L)
+#define APP_ROD_CONTROL_MAX_MDEG            (-25100L)
+
+#define APP_ROD_BOOT_DELAY_MS                  2000U
+#define APP_ROD_COMMAND_GAP_MS                  250U
+#define APP_ROD_STARTUP_SETTLE_MS              1500U
+#define APP_ROD_COMMAND_MARGIN_MS               250U
+#define APP_ROD_MANUAL_SPEED_RPM                 20U
+#define APP_ROD_MANUAL_ACCELERATION              10U
+#define APP_ROD_MANUAL_DEFAULT_STEP_MDEG         500L
+
+/* Phase 4: dynamic command-semantics experiment settings. */
+#define APP_SEMANTICS_TEST_OFFSET_MDEG          2000L
+#define APP_SEMANTICS_TEST_SPEED_RPM              10U
+#define APP_SEMANTICS_TEST_ACCELERATION            5U
+#define APP_SEMANTICS_DEFAULT_GAP_MS              100U
+#define APP_SEMANTICS_RESULT_SETTLE_MS           1500U
+#define APP_SEMANTICS_QUERY_WAIT_MS               180U
 
 #endif

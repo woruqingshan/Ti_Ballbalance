@@ -15,6 +15,11 @@
 #include "test_modes/emm_position_calibration_test.h"
 #include "test_modes/motor_sign_test.h"
 #include "test_modes/motor_startup_horizontal_test.h"
+#if APP_MODE == APP_MODE_ROD_MOTOR_MANUAL_CONTROL
+#include "test_modes/motor_manual_control_test.h"
+#elif APP_MODE == APP_MODE_MOTOR_COMMAND_SEMANTICS_TEST
+#include "test_modes/motor_command_semantics_test.h"
+#endif
 #include "vehicle/vehicle_control_port.h"
 
 static VisionLink g_vision;
@@ -151,6 +156,10 @@ int main(void)
     run_motor_sign_test_mode();
 #elif APP_MODE == APP_MODE_MOTOR_STARTUP_HORIZONTAL
     motor_startup_horizontal_test_run();
+#elif APP_MODE == APP_MODE_ROD_MOTOR_MANUAL_CONTROL
+    motor_manual_control_test_run();
+#elif APP_MODE == APP_MODE_MOTOR_COMMAND_SEMANTICS_TEST
+    motor_command_semantics_test_run();
 #else
     uint32_t last_control = 0U;
     uint32_t last_task = 0U;
