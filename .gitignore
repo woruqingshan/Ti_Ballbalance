@@ -1,0 +1,55 @@
+# Keil build output
+**/Objects/
+**/Listings/
+**/*.axf
+**/*.elf
+**/*.hex
+**/*.bin
+**/*.map
+**/*.lst
+**/*.crf
+**/*.d
+**/*.o
+**/*.obj
+**/*.lib
+**/*.dep
+**/*.lnp
+**/*.htm
+**/*.html
+**/*.build_log.htm
+**/*.build_log.html
+
+# Keil per-user / transient files
+**/*.uvguix.*
+**/*.uvoptx
+**/*.uvgui.*
+**/*.scvd
+**/*.dbgconf
+**/*.ini
+**/*.bak
+**/*.tmp
+**/*.user
+**/.mxproject
+
+# SysConfig generated caches (committed generated C/H are retained)
+**/.metadata/
+**/.syscfg/
+
+# Python tools
+**/__pycache__/
+**/*.py[cod]
+.venv/
+venv/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs and captures
+logs/
+runs/
+*.log
+*.csv
+*.pcap

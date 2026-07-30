@@ -1,0 +1,29 @@
+/** MSPM0 SDK 2.02.00.05 source-of-truth configuration. */
+//@cliArgs --device "MSPM0G350X" --package "LQFP-64(PM)" --part "Default"
+//@v2CliArgs --device "MSPM0G3507" --package "LQFP-64(PM)"
+// @cliArgs --board /ti/boards/LP_MSPM0G3507 --rtos nortos
+
+const UART = scripting.addModule("/ti/driverlib/UART", {}, false);
+const vision = UART.addInstance();
+const emm = UART.addInstance();
+const SYSCTL = scripting.addModule("/ti/driverlib/SYSCTL");
+
+vision.$name = "VISION_UART";
+vision.profile = "CONFIG_PROFILE_1";
+vision.peripheral.$assign = "UART0";
+vision.targetBaudRate = 115200;
+vision.enabledInterrupts = ["RX"];
+vision.enableFIFO = false;
+vision.peripheral.rxPin.$assign = "PA11";
+vision.peripheral.txPin.$assign = "PA10";
+
+emm.$name = "EMM_UART";
+emm.profile = "CONFIG_PROFILE_1";
+emm.peripheral.$assign = "UART1";
+emm.targetBaudRate = 115200;
+emm.enableFIFO = false;
+emm.peripheral.rxPin.$assign = "PB5";
+emm.peripheral.txPin.$assign = "PB4";
+
+SYSCTL.forceDefaultClkConfig = true;
+SYSCTL.clockTreeEn = true;
