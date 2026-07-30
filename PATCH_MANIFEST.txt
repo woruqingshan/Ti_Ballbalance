@@ -1,0 +1,17 @@
+.gitignore
+src/app/app_config.h
+src/app/app_main.c
+src/communication/vision_link.c
+src/communication/vision_link.h
+src/protocol/protocol.h
+src/protocol/pi_ti_messages.h
+src/control/vision_control_preview.h
+src/test_modes/pi_ti_manual_link_test.h
+src/test_modes/ball_state_link_test.h
+tools/pi_ti_stage567_tool.py
+tools/verify_phase567_patch.ps1
+host_tests/test_pi_ti_messages.c
+host_tests/run_phase567_host_tests.bat
+docs/PHASE_5_6_7_TESTS.md
+PATCH_README.md
+PATCH_MANIFEST.txt

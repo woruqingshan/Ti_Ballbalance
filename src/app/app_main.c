@@ -19,6 +19,11 @@
 #include "test_modes/motor_manual_control_test.h"
 #elif APP_MODE == APP_MODE_MOTOR_COMMAND_SEMANTICS_TEST
 #include "test_modes/motor_command_semantics_test.h"
+#elif APP_MODE == APP_MODE_PI_TI_MANUAL_LINK
+#include "test_modes/pi_ti_manual_link_test.h"
+#elif APP_MODE == APP_MODE_BALL_STATE_SIMULATION || \
+      APP_MODE == APP_MODE_REAL_VISION_OBSERVER
+#include "test_modes/ball_state_link_test.h"
 #endif
 #include "vehicle/vehicle_control_port.h"
 
@@ -160,6 +165,12 @@ int main(void)
     motor_manual_control_test_run();
 #elif APP_MODE == APP_MODE_MOTOR_COMMAND_SEMANTICS_TEST
     motor_command_semantics_test_run();
+#elif APP_MODE == APP_MODE_PI_TI_MANUAL_LINK
+    pi_ti_manual_link_test_run();
+#elif APP_MODE == APP_MODE_BALL_STATE_SIMULATION
+    ball_state_link_test_run(true);
+#elif APP_MODE == APP_MODE_REAL_VISION_OBSERVER
+    ball_state_link_test_run(false);
 #else
     uint32_t last_control = 0U;
     uint32_t last_task = 0U;

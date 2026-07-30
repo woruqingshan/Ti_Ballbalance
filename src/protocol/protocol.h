@@ -16,7 +16,11 @@ typedef enum {
     MSG_CONTROL_COMMAND = 0x10,
     MSG_TASK_EVENT = 0x81,
     MSG_CONTROL_TELEMETRY = 0x82,
-    MSG_HEARTBEAT = 0x83
+    MSG_HEARTBEAT = 0x83,
+    MSG_COMMAND_ACK = 0x84,
+    MSG_MOTOR_STATUS = 0x85,
+    MSG_LINK_STATS = 0x86,
+    MSG_BALL_PREVIEW = 0x87
 } ProtocolMessageType;
 
 typedef struct {
