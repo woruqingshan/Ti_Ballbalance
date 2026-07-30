@@ -37,13 +37,15 @@
 /* Reserved for the later BallObservation -> TI closed-loop production app. */
 #define APP_MODE_PI_BALL_OBSERVATION_CONTROL    21
 
-/* T1 default: receive/decode only; no UART1, Emm or motor action. */
-#define APP_MODE APP_MODE_BALL_OBSERVATION_RX_DIAG
+/*
+ * T2 default: receive real/simulated observations and evaluate control
+ * eligibility. Change to APP_MODE_BALL_CONTROL_DRY_RUN for T3.
+ */
+#define APP_MODE APP_MODE_BALL_CONTROL_DRY_RUN
 
-/* Prevent unfinished future modes from falling through to the legacy app. */
-#if APP_MODE == APP_MODE_BALL_CONTROL_DRY_RUN || \
-    APP_MODE == APP_MODE_PI_BALL_OBSERVATION_CONTROL
-#error Mode 19/21 is reserved but not implemented by the T1 patch
+/* Mode 21 remains blocked until motor-output stages are implemented. */
+#if APP_MODE == APP_MODE_PI_BALL_OBSERVATION_CONTROL
+#error Mode 21 is reserved and not implemented by the T2/T3 patch
 #endif
 
 /* Set to 1 only after the phase-4 dynamic-command tests are documented. */
@@ -140,12 +142,34 @@
 #define APP_PI_TARGET_DIAG_ECHO_EACH_BYTE             1U
 
 /*
- * T1 BallObservation receive-only settings.
+ * BallObservation receive and validation settings.
  * Frame: A5 5A | seq | flags | position:i16le | velocity:i16le |
  *        confidence:u16le | vision_age_ms:u16le | crc16:u16le
  */
 #define APP_BALL_OBS_FRAME_SIZE                      14U
 #define APP_BALL_OBS_RX_BUDGET_BYTES                32U
+#define APP_BALL_OBS_OBSERVER_PERIOD_MS              10U
+#define APP_BALL_OBS_EXPECTED_PERIOD_MS              25U
+#define APP_BALL_OBS_VALID_MAX_AGE_MS               120U
+#define APP_BALL_OBS_LINK_TIMEOUT_MS                600U
+#define APP_BALL_OBS_REACQUIRE_FRAMES                 3U
+
+#define APP_BALL_OBS_POSITION_MIN_CENTI_CM        (-1300)
+#define APP_BALL_OBS_POSITION_MAX_CENTI_CM          1300
+#define APP_BALL_OBS_MAX_ABS_VELOCITY_CENTI_CM_S   5000U
+#define APP_BALL_OBS_MIN_CONFIDENCE_MILLI           350U
+#define APP_BALL_OBS_ALLOW_PREDICTED                   0U
+
+/*
+ * T3 fixed-point dry-run controller. It computes target offset in mdeg but Mode
+ * 19 never initializes or commands UART1/Emm/motor hardware.
+ */
+#define APP_BALL_CONTROL_TARGET_CENTI_CM               0
+#define APP_BALL_CONTROL_KP_MDEG_PER_CM                60L
+#define APP_BALL_CONTROL_KD_MDEG_PER_CM_S              15L
+#define APP_BALL_CONTROL_MAX_OFFSET_MDEG              200L
+#define APP_BALL_CONTROL_MAX_SLEW_MDEG_PER_S          800L
+#define APP_BALL_CONTROL_MOTOR_SIGN                      1L
 
 /* Preview controller. These are safe bring-up values, not final Task 3 gains. */
 #define APP_PREVIEW_POSITION_KP                  0.15f
@@ -154,7 +178,6 @@
 #define APP_PREVIEW_CONTROL_SLEW_PER_UPDATE      0.15f
 #define APP_PREVIEW_MDEG_PER_CONTROL_UNIT         250L
 #define APP_PREVIEW_MAX_OFFSET_MDEG               500L
-#define APP_BALL_CONTROL_MOTOR_SIGN                 1L
 
 #define APP_VISION_MIN_CONFIDENCE_MILLI           350U
 #define APP_VISION_MAX_AGE_MS                      120U
