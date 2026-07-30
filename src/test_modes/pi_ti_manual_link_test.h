@@ -109,6 +109,18 @@ static void pi_ti_send_link_stats_frame(const VisionLink *link,
     vision_link_send_frame(MSG_LINK_STATS, payload, sizeof(payload), now_ms);
 }
 
+static void pi_ti_send_heartbeat_frame(uint32_t now_ms)
+{
+    uint8_t payload[8];
+
+    protocol_put_u32_le(&payload[0], APP_MODE);
+    protocol_put_u32_le(&payload[4], now_ms);
+    vision_link_send_frame(MSG_HEARTBEAT,
+                           payload,
+                           sizeof(payload),
+                           now_ms);
+}
+
 static bool pi_ti_duplicate_token(uint32_t token,
                                   bool has_last_token,
                                   uint32_t last_token)
@@ -129,9 +141,25 @@ static void pi_ti_manual_link_test_run(void)
     uint8_t last_result = PI_ACK_OK;
     int32_t last_detail = 0;
 
+    /*
+     * Publish on UART0 before touching the motor-side UART. Mode 11 must be
+     * observable immediately after reset, even when UART1/Emm is disconnected.
+     * No motor command is issued automatically; STARTUP_HORIZONTAL remains the
+     * only entry into the validated disable/clear/enable/startup sequence.
+     */
     vision_link_init(&link);
     rod_motor_control_init(&motor);
-    (void) emm_v5_enable(false);
+
+    {
+        uint32_t boot_ms = bsp_time_ms();
+        pi_ti_send_heartbeat_frame(boot_ms);
+        pi_ti_send_motor_status_frame(&motor, &link, 0U, last_result,
+                                      false, false, false, 0U, boot_ms);
+        pi_ti_send_link_stats_frame(&link, boot_ms);
+        last_status_ms = boot_ms;
+        last_heartbeat_ms = boot_ms;
+        last_stats_ms = boot_ms;
+    }
 
     for (;;) {
         uint32_t now_ms = bsp_time_ms();
@@ -270,12 +298,8 @@ static void pi_ti_manual_link_test_run(void)
         }
         if ((uint32_t) (now_ms - last_heartbeat_ms) >=
             APP_PI_HEARTBEAT_PERIOD_MS) {
-            uint8_t payload[8];
             last_heartbeat_ms = now_ms;
-            protocol_put_u32_le(&payload[0], APP_MODE);
-            protocol_put_u32_le(&payload[4], now_ms);
-            vision_link_send_frame(MSG_HEARTBEAT, payload,
-                                   sizeof(payload), now_ms);
+            pi_ti_send_heartbeat_frame(now_ms);
         }
         if ((uint32_t) (now_ms - last_stats_ms) >=
             APP_PI_LINK_STATS_PERIOD_MS) {

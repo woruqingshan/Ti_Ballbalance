@@ -24,6 +24,8 @@
 #elif APP_MODE == APP_MODE_BALL_STATE_SIMULATION || \
       APP_MODE == APP_MODE_REAL_VISION_OBSERVER
 #include "test_modes/ball_state_link_test.h"
+#elif APP_MODE == APP_MODE_PI_TI_UART0_DIAG
+#include "test_modes/pi_ti_uart0_diag_test.h"
 #endif
 #include "vehicle/vehicle_control_port.h"
 
@@ -171,6 +173,8 @@ int main(void)
     ball_state_link_test_run(true);
 #elif APP_MODE == APP_MODE_REAL_VISION_OBSERVER
     ball_state_link_test_run(false);
+#elif APP_MODE == APP_MODE_PI_TI_UART0_DIAG
+    pi_ti_uart0_diag_test_run();
 #else
     uint32_t last_control = 0U;
     uint32_t last_task = 0U;
