@@ -6,8 +6,8 @@
 #include "communication/vision_uart.h"
 #include "protocol/pi_ti_messages.h"
 #include "protocol/protocol.h"
-#if APP_MODE == APP_MODE_PI_MOTOR_TARGET_STREAM
-#include "test_modes/pi_motor_target_stream_test.h"
+#if APP_MODE == APP_MODE_PI_MOTOR_TARGET_CH340_DIAG
+#include "test_modes/pi_motor_target_ch340_diag_test.h"
 #endif
 #include "test_modes/test_console.h"
 #include "ti_msp_dl_config.h"
@@ -23,8 +23,8 @@
  * then creates the same frame through protocol_encode(), sends it once and
  * halts. No RX processing, heartbeat loop, UART1 or motor access.
  *
- * Mode 16 is intentionally reused as APP_MODE_PI_MOTOR_TARGET_STREAM. This
- * avoids changing app_main.c or the Keil project during competition bring-up.
+ * Mode 16 is intentionally reused as APP_MODE_PI_MOTOR_TARGET_CH340_DIAG.
+ * It sends event-driven text diagnostics only after receive/parse/apply events.
  *
  * Mode 17: one-shot request/response through the existing RX ISR and ring
  * buffer. It is preserved for later diagnostics.
@@ -147,11 +147,11 @@ static bool pi_ti_diag_wait_irq(ProtocolFrame *received,
     return false;
 }
 
-#if APP_MODE == APP_MODE_PI_MOTOR_TARGET_STREAM
+#if APP_MODE == APP_MODE_PI_MOTOR_TARGET_CH340_DIAG
 /* app_main.c already routes numeric mode 16 to this function. */
 static void pi_ti_protocol_rx_poll_diag_run(void)
 {
-    pi_motor_target_stream_test_run();
+    pi_motor_target_ch340_diag_run();
 }
 #endif
 
